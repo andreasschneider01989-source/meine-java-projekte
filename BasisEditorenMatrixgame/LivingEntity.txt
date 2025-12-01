@@ -1,0 +1,52 @@
+// Neue abstrakte Basisklasse für alles Lebendige im Matrixgame
+public abstract class LivingEntity extends KreisObjekt {
+    double lifeForce;           // aktuelle "Leben"-Energie (kann > maxLeben sein bei Heilung)
+    double maxLifeForce;
+    double immunityLevel;       // 0.0 bis 1.0 – wie gut erkennt sie Selbst/Nicht-Selbst?
+    long[] memoryMarkers;       // Gedächtnis für bereits gesehene Antigene (z.B. RGB-Hashes)
+    boolean isRegulatory = false; // T-reg Zelle? Unterdrückt Überreaktionen?
+
+    public boolean isSelf(LivingEntity other) {
+        // Fraktales Selbst-Erkennungsprinzip: je ähnlicher die "Seelenfarbe", desto mehr Selbst
+        double colorDiff = colordif(other);
+        double selfThreshold = 80.0 * (1.0 - immunityLevel); // Reife Immunsystem = engere Toleranz
+        return colorDiff < selfThreshold;
+    }
+
+    public void signalCytokineStorm() {
+        // später: beeinflusst alle Einheiten im Radius → Angst vor Überreaktion = Perfektionismus
+    }
+}
+
+public class Immunocyte extends LivingEntity {
+    public Immunocyte() {
+        super();
+        this.lifeForce = 10 + Math.random() * 20;
+        this.maxLifeForce = lifeForce;
+        this.immunityLevel = 0.1; // neugeborenes Immunsystem – lernt erst
+        this.memoryMarkers = new long[16];
+        this.size = 8 + Math.random() * 12;
+        this.speed = 300 + Math.random() * 400;
+    }
+
+    @Override
+    public void updateBehavior(List<LivingEntity> allEntities) {
+        LivingEntity nearestThreat = findNearestNonSelf(allEntities);
+        if (nearestThreat != null) {
+            if (!isSelf(nearestThreat)) {
+                moveTo(nearestThreat);
+                if (getDistance(nearestThreat) < distance) {
+                    attack(nearestThreat);
+                    learnFrom(nearestThreat); // Gedächtniszelle wird stärker
+                }
+            }
+        } else {
+            patrol(); // ruhige Erkundung = kindliche Neugier
+        }
+    }
+
+    private void learnFrom(LivingEntity pathogen) {
+        immunityLevel = Math.min(1.0, immunityLevel + 0.02);
+        // hier später echtes maschinelles Lernen oder einfaches Hashing des RGB-Musters
+    }
+}
