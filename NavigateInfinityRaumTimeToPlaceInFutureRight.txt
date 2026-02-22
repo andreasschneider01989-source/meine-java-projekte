@@ -1,0 +1,1 @@
+Navigation in Infinit Raum Time to write it on the rigth place: navigate with files(Move), +,- (Zoom); t,g (time slow or fast)
