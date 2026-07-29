@@ -621,3 +621,241 @@ public class SchönerZoom2FormScaleUnitsBasisFightToChessVision extends JPanel {
 		return mainControlPanel;
 	}
 }
+
+package ordner1;
+
+public class Unit extends KreisObjekt {
+	double maxLeben;
+    double leben;
+    double damage;
+    double distance;
+    double speed;
+    int team;
+    int kills;
+    public Unit target = null;
+    
+    // Neue Variablen für Entscheidungsalgorithmen und Steuerung
+    public String decisionAlgorithm = "NEAREST_ENEMY"; // "TARGET_POINT", "STAND_STILL", "NEAREST_ENEMY"
+    public boolean isSelectable = true;
+    public boolean isInfluencable = true;
+
+    // Zielkoordinaten im 3D-Raum (x, y, z) für manuelle oder algorithmische Bewegung
+    public Double targetPosX = null;
+    public Double targetPosY = null;
+    public Double targetPosZ = null;
+
+    // Spezifisches Ziel für einen manuellen Angriffsbefehl
+    public Unit manualTarget = null;
+    
+    
+    int id;
+	
+
+	public void moveTo(KreisObjekt oponent) {
+		double distQ = (this.posX - oponent.posX) * (this.posX - oponent.posX)
+				+ (this.posY - oponent.posY) * (this.posY - oponent.posY)
+				+ (this.posZ - oponent.posZ) * (this.posZ - oponent.posZ);
+		double dist = Math.pow(distQ, 0.5);
+		
+		double dx=posX-oponent.posX;
+		double dy=posY-oponent.posY;
+		double dz=posZ-oponent.posZ;
+		
+		double movDist=Math.min(speed, Math.abs(dist-distance));
+		
+		vx=-dx/dist*movDist;
+		vy=-dy/dist*movDist;
+		vz=-dz/dist*movDist;
+
+	}
+	
+	public void moveTo(double posX, double posY, double posZ, double speedManuel) {
+		double distQ = (this.posX - posX) * (this.posX - posX)
+				+ (this.posY - posY) * (this.posY - posY)
+				+ (this.posZ - posZ) * (this.posZ - posZ);
+		if(distQ<=0.00001) {targetPosX = null; targetPosY=null;}
+		double dist = Math.pow(distQ, 0.5);
+		
+		double dx=this.posX-posX;
+		double dy=this.posY -posY;
+		double dz=this.posZ -posZ;
+		
+		double movDist=Math.min(speedManuel, Math.min(speed, Math.abs(dist-0.0000005)));
+		
+		vx=-dx/dist*movDist;
+		vy=-dy/dist*movDist;
+		vz=-dz/dist*movDist;
+
+	}
+	
+	public double getDistance(Unit oponent) {
+		double distQ = (this.posX - oponent.posX) * (this.posX - oponent.posX)
+				+ (this.posY - oponent.posY) * (this.posY - oponent.posY)
+				+ (this.posZ - oponent.posZ) * (this.posZ - oponent.posZ);
+		double dist = Math.pow(distQ, 0.5);
+		return dist;
+	}
+
+	public Unit() {
+		super();
+		this.leben = 5*Math.random()/Math.random();
+		this.maxLeben=leben;
+		this.damage = Math.random()/Math.random();
+		this.distance = 100*Math.random();
+		this.speed = 100*Math.random();
+		this.team = (int)(Math.random()*2);
+		this.size=10;
+		this.id=(int)(Math.random()*1000);
+//		this.größePerLive(1);
+//		this.größePerKills(1);
+	}
+	
+	public void printWerte(int indexInList, int zeitSchritt) {
+
+	        System.out.println("=== UNIT REPORT [Index: " + indexInList + "] ===");
+	        System.out.println("System.currentTimeMillis() = " + System.currentTimeMillis());
+	        System.out.println("Zeitschritt = " + zeitSchritt);
+	        System.out.println("Id = " + id + " | Team = " + team);
+	        System.out.println("Position -> posX: " + posX + ", posY: " + posY + ", posZ: " + posZ);
+	        System.out.println("Algorithmus = " + decisionAlgorithm + " | Selectable: " + isSelectable + " | Influencable: " + isInfluencable);
+	        System.out.println("Leben = " + leben + "/" + maxLeben + " | Damage = " + damage + " | Speed = " + speed + " | Distance = " + distance);
+	        System.out.println("============================================");
+	    
+    	
+    	
+    	
+//    	if(this.target != null) {
+//    	System.out.println("TargetId = "+target.id);
+//    	System.out.println("TargetX = "+target.posX);
+//    	System.out.println("TargetY = "+target.posY);
+//    	System.out.println("TargetZ = "+target.posZ);}
+//    	System.out.println("Geschwindigkeit vx = "+vx);
+//    	System.out.println("Geschwindigkeit vy = "+vy);
+//    	System.out.println("Geschwindigkeit vz = "+vz);
+//    	System.out.println("Masse = "+mass);
+//    	System.out.println("Farbe = "+color);
+    }
+	
+	public void choseRandColorTeam() {
+		if (Math.random() < 0.3)
+			if (red + green + blue < 300)
+				team = 1;
+			else if (red + green + blue < 500)
+			team = 2;
+			else
+				team = 1;
+		if (Math.random() < 0.5) {
+			if (red > green && green > blue)
+				team=1;
+		if (red < green && green < blue)
+			team=3;}
+		
+		if (Math.random() < 0.3) {
+			if (red > green || green > blue)
+				team=1;
+		if (red < green || green < blue)
+			team=2;}
+	}
+	
+//	public void größePerLive(double div) {
+//		double size=Math.pow(leben/div, 0.3333);
+//		size=Math.min(size, 20);
+//		this.size=size;
+//	}
+//	
+//	public void größePerKills(double div) {
+//		double size=3+Math.pow(kills/div, 0.3333);
+//		size=Math.min(size, 20);
+//		this.size=size;
+//	}
+	
+	
+}
+
+package ordner1;
+
+public class KreisObjekt {
+  double size;
+  double red;
+  double green;
+  double blue;
+  
+  double posX;
+  double posY;
+  double posZ;
+  
+  double vx;
+  double vy;
+  double vz;
+  
+  public boolean isSelected = false;
+  
+  public KreisObjekt(double size, double red, double green, double blue, double posX, double posY, double posZ,double vx, double vy, double vz) {
+		this.size = size;
+		this.red = red;
+		this.green = green;
+		this.blue = blue;
+		this.posX = posX;
+		this.posY = posY;
+		this.posZ = posZ;
+		this.vx = vx;
+		this.vy = vy;
+		this.vz = vz;
+	}
+  
+public KreisObjekt(double size, double red, double green, double blue, double posX, double posY, double posZ) {
+	this.size = size;
+	this.red = red;
+	this.green = green;
+	this.blue = blue;
+	this.posX = posX;
+	this.posY = posY;
+	this.posZ = posZ;
+}
+
+
+public KreisObjekt(double posX, double posY) {
+	this.posX = posX;
+	this.posY = posY;
+	this.size = 10.0;
+	this.red = 255;
+	this.green = 0;
+	this.blue = 0;
+	this.posZ = 0;
+}
+
+//Default mit interessantem Random (für die Initialisierung des Kindes)
+public KreisObjekt () {
+	// Standard-Initialisierung für Kinder/neue Einheiten
+	this.size = 5000;
+	this.red = 255 * Math.random();
+	this.green = 255 * Math.random();
+	this.blue = 255 * Math.random();
+	this.posX = (Math.random() - 0.5) * 10000;
+	this.posY = (Math.random() - 0.5) * 10000;
+	this.posZ = 0;
+	this.vx = 0;
+	this.vy = 0;
+	this.vz = 0;
+}
+
+public void move (double time) {
+	posX=posX+vx*time;
+	posY=posY+vy*time;
+	posZ=posZ+vz*time;
+}
+
+/**
+ * Berechnet die Farbdifferenz (Euklidische Distanz im RGB-Raum).
+ */
+public double colordif(KreisObjekt other) {
+	double difR = red - other.red;
+	double difG = green - other.green;
+	double difB = blue - other.blue;
+	
+	// Pythagoras: d = sqrt(dR^2 + dG^2 + dB^2)
+	double difQ = difR * difR + difG * difG + difB * difB;
+	return Math.pow(difQ, 0.5);
+}
+  
+}
