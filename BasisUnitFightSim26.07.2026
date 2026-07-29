@@ -1,0 +1,623 @@
+package ordner1;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.BasicStroke; // Wird für die dicke Rand-Markierung benötigt
+
+//Basis Unit Fight Sim To Chess Vision 16v16 Konsolnausgabe in Eclipse für LLMs Kopierbar und analysierbar für KI-Games Matrixgame AlphaZero Didaktik und Entscheidungsalgorithmen für Zielerreichungen geplant und sehr sinnvoll 16.07.2026,14:15UhrAndreasSchneider zuHause
+public class SchönerZoom2FormScaleUnitsBasisFightToChessVision extends JPanel {
+
+	// --- Instanzvariablen (NICHT static) ---
+	private int FRAME_WIDTH = 1920;
+	private int FRAME_HEIGHT = 1080;
+	private double zoomFactor = 0.0001;
+	private double zoomCenterX = 0;
+	private double zoomCenterY = 0;
+	private static final double ZOOM_STEP = 1.2;
+	private double feinheit = 70;
+	private int pause = 30;
+	private double PAN_STEP = 0.0001;
+
+	// Wichtig: unitList als Instanzvariable
+	private List<Unit> unitList = new ArrayList<>();
+
+	// --- NEU: Temporäre Liste für neu erschaffene Einheiten und Gebäude ---
+	private List<Unit> unitsToAdd = new ArrayList<>();
+
+	// --- Konstruktor ---
+	public SchönerZoom2FormScaleUnitsBasisFightToChessVision() {
+		initializeSettings();
+		initializeUnits();
+		setupPanel();
+	}
+
+	private void initializeSettings() {
+		PAN_STEP = feinheit / zoomFactor;
+	}
+
+	// Variablen für das zeitgesteuerte Logging (oben in der Klasse deklarieren)
+	private long lastConsolePrintTime = 0;
+
+	private void initializeUnits() {
+		int counterId = 0;
+		// Units hier hinzufügen - nicht in main!
+		// public Unit(size, red, green, blue, posX, double posY, double posZ,double vx,
+		// double vy, double vz)
+
+//    	Unit test=new Unit();
+//    	test.team=1;
+//    	test.posX=0;
+//    	test.posY=0;
+//    	test.posZ-=0;
+//    	test.blue=254;
+//    	test.red=254;
+//    	test.green=254;
+//    	test.speed=200000;
+//    	test.id=counterId;
+//    	unitList.add(test);
+//    	counterId++;
+
+		for (int i = 0; i < 8; i++) {
+			Unit Unit1 = new Unit();
+			Unit1.team = 1;
+			Unit1.posX = 10000 * i;
+			Unit1.posY = 0;
+			Unit1.posZ -= 0;
+			Unit1.blue = 254;
+			Unit1.red = 254;
+			Unit1.green = 254;
+			Unit1.id = counterId;
+			unitList.add(Unit1);
+			counterId++;
+
+			Unit Reihe2 = new Unit();
+			Reihe2.team = 1;
+			Reihe2.posX = 10000 * i;
+			Reihe2.posY = 10000;
+			Reihe2.posZ -= 0;
+			Reihe2.blue = 254;
+			Reihe2.red = 254;
+			Reihe2.green = 254;
+			Reihe2.id = counterId;
+			unitList.add(Reihe2);
+			counterId++;
+		}
+
+//        	Unit Unit2=new Unit();
+//        	Unit2.team=2;
+//        	Unit2.red=0;
+//        	Unit2.green=0;
+//        	Unit2.blue=255*Math.random();
+//        	Unit2.posX+=500000*Math.random();
+//        	Unit2.posY+=500000*Math.random();
+//        	Unit2.posZ+=500000*Math.random();
+//        	Unit2.red=0;
+		for (int j = 0; j < 8; j++) {
+			Unit Unit3 = new Unit();
+			Unit3.team = 2;
+			Unit3.red = 50;
+			Unit3.green = 50;
+			Unit3.blue = 50;
+			Unit3.posX = 10000 * j;
+			Unit3.posY = 80000;
+			Unit3.posZ = 0;
+			Unit3.id = counterId;
+			unitList.add(Unit3);
+			counterId++;
+
+			Unit Row7 = new Unit();
+			Row7.team = 2;
+			Row7.red = 50;
+			Row7.green = 50;
+			Row7.blue = 50;
+			Row7.posX = 10000 * j;
+			Row7.posY = 70000;
+			Row7.posZ += 0;
+			Row7.id = counterId;
+			unitList.add(Row7);
+			counterId++;
+
+		}
+	}
+
+//        unitList.add(new Unit(22, 285, 33, 232, 55, 99, 151, -21, 4, 1));
+//        unitList.add(new Unit(20, 55, 143, 22, 55, 7659, 1231));
+//        unitList.add(new Unit(23, 145, 113, 232, 595, 99, 151));}
+
+	private void setupPanel() {
+		setPreferredSize(new Dimension(FRAME_WIDTH, FRAME_HEIGHT));
+		setBackground(Color.BLACK);
+
+		// --- MOUSELISTENER FÜR SELEKTION UND BEFEHLE ---
+		this.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e) {
+				// 1. Linksklick: Einheiten selektieren
+				if (SwingUtilities.isLeftMouseButton(e)) {
+					int mouseX = e.getX();
+					int mouseY = e.getY();
+					boolean unitFound = false;
+
+					for (Unit u : unitList) {
+						double sx = (zoomCenterX + u.posX) * zoomFactor + getWidth() / 2.0;
+						double sy = (zoomCenterY + u.posY) * zoomFactor + getHeight() / 2.0;
+						double radius = Math.abs(u.size);
+
+						if (Math.hypot(mouseX - sx, mouseY - sy) <= radius) {
+							u.isSelected = true;
+							unitFound = true;
+						} else if (!e.isShiftDown()) {
+							u.isSelected = false;
+						}
+					}
+
+					if (!unitFound && !e.isShiftDown()) {
+						for (Unit u : unitList) {
+							u.isSelected = false;
+						}
+					}
+					repaint();
+				}
+				// 2. Rechtsklick: Befehle an ausgewählte Einheiten verteilen
+				// 2. Rechtsklick: Befehle an ausgewählte Einheiten verteilen
+				else if (SwingUtilities.isRightMouseButton(e)) {
+					int mouseX = e.getX();
+					int mouseY = e.getY();
+					double worldTargetX = (mouseX - getWidth() / 2.0) / zoomFactor - zoomCenterX;
+					double worldTargetY = (mouseY - getHeight() / 2.0) / zoomFactor - zoomCenterY;
+
+					Unit clickedEnemy = null;
+					for (Unit u : unitList) {
+						double sx = (zoomCenterX + u.posX) * zoomFactor + getWidth() / 2.0;
+						double sy = (zoomCenterY + u.posY) * zoomFactor + getHeight() / 2.0;
+						double radius = Math.abs(u.size);
+						if (Math.hypot(mouseX - sx, mouseY - sy) <= radius) {
+							clickedEnemy = u;
+							break;
+						}
+					}
+
+					for (Unit u : unitList) {
+						if (u.isSelected) {
+
+							// --- NEU: Logik für den Gebäude-Bau ---
+							if (u.decisionAlgorithm.equals("BUILDING_MODE")) {
+								// Einheit "baut" ein Gebäude an der berechneten Weltkoordinate
+								Building newBuilding = new Building(worldTargetX, worldTargetY, u.team);
+								newBuilding.id = unitList.size() + unitsToAdd.size() + 1000; // Eindeutige ID
+								unitsToAdd.add(newBuilding);
+
+								// Nach dem Bauauftrag kehrt die Einheit in einen Ruhezustand zurück
+								u.decisionAlgorithm = "STAND_STILL";
+								System.out.println("Gebäude für Team " + u.team + " gebaut bei X:" + worldTargetX
+										+ " Y:" + worldTargetY);
+								continue; // Springe direkt zur nächsten Einheit, um Angriffslogik zu überspringen
+							}
+
+							if (clickedEnemy != null) {
+								// Angriffsbefehl auf spezifischen Gegner
+								u.manualTarget = clickedEnemy;
+								u.targetPosX = null;
+								u.targetPosY = null;
+								u.decisionAlgorithm = "NEAREST_ENEMY";
+							} else {
+								// Bewegungs-Befehl ins Leere
+								u.targetPosX = worldTargetX;
+								u.targetPosY = worldTargetY;
+								u.manualTarget = null;
+								u.decisionAlgorithm = "TARGET_POINT";
+							}
+						}
+					}
+					repaint();
+				}
+			}
+		});
+	}
+
+	// --- Game Loop als Instanzmethode ---
+	public void startGameLoop() {
+		Thread gameThread = new Thread(() -> {
+			while (!Thread.currentThread().isInterrupted()) {
+				try {
+					Thread.sleep(pause);
+					GameLoop();
+					repaint(); // Kann jetzt aufgerufen werden, da Instanzmethode
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+					break;
+				}
+			}
+		});
+		gameThread.setDaemon(true); // Wird beendet wenn Fenster geschlossen
+		gameThread.start();
+	}
+
+	public Unit nextGegner(Unit current) {
+		Unit gegner = null;
+		double min = 999999999;
+		for (Unit unit : unitList) {
+			if (current.getDistance(unit) < min && current.team != unit.team) {
+				min = current.getDistance(unit);
+				gegner = unit;
+			}
+		}
+		return gegner;
+
+	}
+
+	int zeitSchritt = 0;
+
+	private void GameLoop() {
+		if (ende)
+			return;
+		zeitSchritt++;
+
+		int survive1 = 0;
+		int survive2 = 0;
+
+		for (int i = 0; i < unitList.size(); i++) {
+			Unit unit = unitList.get(i);
+
+			// Statistik-Zählung für Teams am Leben erhalten
+			if (unit.team == 1)
+				survive1++;
+			if (unit.team == 2)
+				survive2++;
+
+			// Konsolenausgabe alle 10 Schritte
+			if (zeitSchritt % 100 == 0) {
+//				unit.printWerte(i, zeitSchritt);
+			}
+			// In deiner Schleife / deinem Loop aufrufen:
+			long now = System.currentTimeMillis();
+			long CONSOLE_PRINT_INTERVAL_MS = 1000;
+			if (now - lastConsolePrintTime >= CONSOLE_PRINT_INTERVAL_MS) {
+				// Hier kommt gleich nur deine Konsolenausgabe rein
+				System.out.println(System.currentTimeMillis());
+				for (int j = 0; j < unitList.size(); j++) {
+					unitList.get(j).printWerte(j, zeitSchritt);
+				}
+				lastConsolePrintTime = now;
+			}
+
+			// Priorität 1: Manueller Angriffsbefehl auf ein bestimmtes Ziel
+			if (unit.manualTarget != null && unit.manualTarget.leben > 0) {
+				Unit gegner = unit.manualTarget;
+				if (unit.getDistance(gegner) <= unit.distance) {
+					gegner.leben -= unit.damage;
+					System.out.println("Unit " + unit.id + " attackiert manuelles Ziel " + gegner.id + " | Restleben: "
+							+ gegner.leben);
+					if (gegner.leben <= 0) {
+						unitList.remove(gegner);
+						System.out.println("Unit " + gegner.id + " wurde vernichtet.");
+						System.out.println("Lebende Units aus Team 1 = " + survive1);
+						System.out.println("Lebende Units aus Team 2 = " + survive2);
+						unit.manualTarget = null;
+					}
+				} else {
+					unit.moveTo(gegner);
+					unit.move(1);
+				}
+				continue;
+			}
+
+			// Priorität 2: Ausführung basierend auf dem aktiven Entscheidungs-Algorithmus
+			switch (unit.decisionAlgorithm) {
+
+			// --- NEU: Produktions-Algorithmus für Gebäude ---
+			case "PRODUCE_UNITS":
+				if (unit instanceof Building) {
+					Building b = (Building) unit;
+					b.spawnCooldown++; // Timer hochzählen
+
+					if (b.spawnCooldown >= b.SPAWN_RATE) {
+						Unit spawned = b.spawnUnit();
+						spawned.id = unitList.size() + unitsToAdd.size() + 2000;
+						unitsToAdd.add(spawned); // Sicher der Zwischenliste hinzufügen
+						b.spawnCooldown = 0; // Timer reset für den Zyklus
+						System.out.println(
+								"Gebäude (ID: " + b.id + ") hat eine neue Einheit (Team " + b.team + ") produziert!");
+					}
+				}
+				break;
+
+			case "TARGET_POINT":
+				// Bewege zu den manuellen Zielkoordinaten
+				if (unit.targetPosX != null && unit.targetPosY != null) {
+					double tZ = (unit.targetPosZ != null) ? unit.targetPosZ : 0.0;
+
+					double distQ = Math.pow(unit.posX - unit.targetPosX, 2) + Math.pow(unit.posY - unit.targetPosY, 2);
+					if (distQ <= 1.0) {
+						unit.targetPosX = null;
+						unit.targetPosY = null;
+						unit.vx = 0;
+						unit.vy = 0;
+						unit.decisionAlgorithm = "STAND_STILL";
+					} else {
+						unit.moveTo(unit.targetPosX, unit.targetPosY, tZ, unit.speed);
+						unit.move(1);
+					}
+				} else {
+					unit.decisionAlgorithm = "NEAREST_ENEMY";
+				}
+				break;
+
+			case "STAND_STILL":
+				unit.vx = 0;
+				unit.vy = 0;
+				unit.vz = 0;
+				break;
+
+			case "NEAREST_ENEMY":
+			default:
+				// Suche nächsten Gegner und bekämpfe ihn
+				Unit gegner = nextGegner(unit);
+				if (gegner != null) {
+					if (unit.getDistance(gegner) <= unit.distance) {
+						gegner.leben -= unit.damage;
+						if (gegner.leben <= 0) {
+							unitList.remove(gegner);
+						}
+					} else {
+						unit.moveTo(gegner);
+						unit.move(1); // Physik-Vektoren ausführen
+					}
+				}
+				break;
+			}
+		}
+
+		// --- NEU: Führe am Ende des Zeitschritts alle neu gebauten Einheiten & Gebäude
+		// ein ---
+		if (!unitsToAdd.isEmpty()) {
+			unitList.addAll(unitsToAdd);
+			unitsToAdd.clear(); // Liste leeren für den nächsten Takt
+		}
+
+		// Win/Loss Conditions
+		if (ende == false) {
+			if (survive1 <= 0 && survive2 > 0) {
+				System.out.println("Team 2 hat gewonnen!");
+				ende = true;
+			}
+			if (survive2 <= 0 && survive1 > 0) {
+				System.out.println("Team 1 hat gewonnen!");
+				ende = true;
+			}
+			if (survive1 <= 0 && survive2 <= 0) {
+				System.out.println("Alle Tod");
+				ende = true;
+			}
+		}
+
+		// Win/Loss Conditions
+		if (ende == false) {
+//			System.out.println("Lebende Units aus Team 1 = " + survive1);
+//			System.out.println("Lebende Units aus Team 2 = " + survive2);
+			if (survive1 <= 0 && survive2 > 0) {
+				System.out.println("Team 2 hat gewonnen!");
+				ende = true;
+			}
+			if (survive2 <= 0 && survive1 > 0) {
+				System.out.println("Team 1 hat gewonnen!");
+				ende = true;
+			}
+			if (survive1 <= 0 && survive2 <= 0) {
+				System.out.println("Alle Tod");
+				ende = true;
+			}
+		}
+	}
+
+	private void processUnitClickSelection(double worldMouseX, double worldMouseY) {
+		boolean clickedAny = false;
+		for (Unit u : unitList) {
+			// Berechne Abstand vom Klick zur Einheit (unter Berücksichtigung eines
+			// Klick-Radius)
+			double distance = Math.hypot(u.posX - worldMouseX, u.posY - worldMouseY);
+			double hitRadius = 25.0; // Toleranzradius für den Klick
+
+			if (distance <= hitRadius) {
+				u.isSelected = !u.isSelected; // Status umschalten (oder direkt auf true setzen)
+				clickedAny = true;
+
+				if (u.isSelected) {
+					System.out.println("[SPIELER-AKTION] Spieler hat Einheit ausgewählt -> " + "ID: " + u.id
+							+ " | Team: " + u.team + " | Position: (" + String.format("%.1f", u.posX) + ", "
+							+ String.format("%.1f", u.posY) + ")");
+				} else {
+					System.out.println("[SPIELER-AKTION] Spieler hat Auswahl aufgehoben für Einheit ID: " + u.id);
+				}
+			}
+		}
+		if (!clickedAny) {
+			System.out.println("[SPIELER-AKTION] Klick ins Leere – Auswahl auf dem Feld angepasst.");
+		}
+	}
+
+	private void triggerActionOnSelectedUnits(String algorithmState) {
+		int updatedCount = 0;
+		for (Unit u : unitList) {
+			if (u.isSelected) {
+				u.decisionAlgorithm = algorithmState;
+				updatedCount++;
+			}
+		}
+		System.out.println(
+				"Aktion ausgeführt: Zustand '" + algorithmState + "' auf " + updatedCount + " Einheit(en) angewendet.");
+	}
+
+	boolean ende = false;
+
+	// --- Pan-Methoden ---
+	public void panLeft() {
+		zoomCenterX += PAN_STEP;
+		repaint();
+	}
+
+	public void panRight() {
+		zoomCenterX -= PAN_STEP;
+		repaint();
+	}
+
+	public void panUp() {
+		zoomCenterY += PAN_STEP;
+		repaint();
+	}
+
+	public void panDown() {
+		zoomCenterY -= PAN_STEP;
+		repaint();
+	}
+
+	// --- Zoom-Methoden ---
+	public void zoomIn() {
+		zoomFactor *= ZOOM_STEP;
+		updatePanStep();
+		repaint();
+	}
+
+	public void zoomOut() {
+		zoomFactor /= ZOOM_STEP;
+		updatePanStep();
+		repaint();
+	}
+
+	private void updatePanStep() {
+		PAN_STEP = feinheit / zoomFactor;
+	}
+
+	private static JPanel createActionControlPanel(SchönerZoom2FormScaleUnitsBasisFightToChessVision simPanel) {
+		JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
+		actionPanel.setBackground(new Color(45, 45, 45));
+
+		JButton btnHeal = new JButton("Heilen");
+		JButton btnBuild = new JButton("Gebäude Bauen"); // Text verdeutlicht
+		JButton btnProduce = new JButton("Einheit Produzieren"); // --- NEUER BUTTON ---
+		JButton btnSpell = new JButton("Zaubern");
+		JButton btnAttack = new JButton("Angriff");
+
+		// Event-Verknüpfungen (Lambda-Expressions für saubere Übergaben)
+		btnHeal.addActionListener(e -> simPanel.triggerActionOnSelectedUnits("HEALING_MODE"));
+		btnBuild.addActionListener(e -> simPanel.triggerActionOnSelectedUnits("BUILDING_MODE"));
+		btnProduce.addActionListener(e -> simPanel.triggerActionOnSelectedUnits("PRODUCE_UNITS"));
+		btnSpell.addActionListener(e -> simPanel.triggerActionOnSelectedUnits("CASTING_SPELL"));
+		btnAttack.addActionListener(e -> simPanel.triggerActionOnSelectedUnits("FOCUSED_ATTACK"));
+
+		actionPanel.add(btnHeal);
+		actionPanel.add(btnBuild);
+		actionPanel.add(btnProduce); // Im UI anmelden
+		actionPanel.add(btnSpell);
+		actionPanel.add(btnAttack);
+
+		return actionPanel;
+	}
+
+	@Override
+	protected void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		Graphics2D g2 = (Graphics2D) g;
+		g2.setColor(Color.BLACK);
+		g2.fillRect(0, 0, getWidth(), getHeight());
+
+		for (KreisObjekt current : unitList) {
+			double radius = Math.abs(current.size);
+			Color color = new Color((int) Math.abs(current.red % 255), (int) Math.abs(current.green % 255),
+					(int) Math.abs(current.blue % 255));
+
+			double sx = (zoomCenterX + current.posX) * zoomFactor + getWidth() / 2.0;
+			double sy = (zoomCenterY + current.posY) * zoomFactor + getHeight() / 2.0;
+
+			// ... dein bestehender Code in paintComponent ...
+			g2.setColor(color);
+			g2.fillOval((int) (sx - radius), (int) (sy - radius), (int) (radius * 2), (int) (radius * 2));
+
+			// --- NEU: Zeichne den Ring, falls die Einheit ausgewählt ist ---
+			if (current.isSelected) { // Hinweis: Falls 'current' als KreisObjekt deklariert ist, caste es zu
+										// (Unit)current
+				g2.setColor(Color.YELLOW); // Matrix-Gelb für klare Sichtbarkeit
+				g2.setStroke(new BasicStroke(3)); // Strichstärke auf 3 Pixel setzen
+
+				// Zeichne einen etwas größeren Ring um die Einheit herum
+				g2.drawOval((int) (sx - radius - 2), (int) (sy - radius - 2), (int) (radius * 2 + 4),
+						(int) (radius * 2 + 4));
+
+				g2.setStroke(new BasicStroke(1)); // Strichstärke für das nächste Objekt zurücksetzen
+			}
+			// ... Ende deiner for-Schleife ...
+		}
+	}
+
+	// --- MAIN METHODE - Nur Einstiegspunkt ---
+	public static void main(String[] args) {
+		// Best Practice: main nur für Swing-invokeLater und Objekterstellung
+		SwingUtilities.invokeLater(() -> {
+			createAndShowGUI();
+		});
+	}
+
+	private static void createAndShowGUI() {
+		// 1. Hauptpanel erstellen
+		SchönerZoom2FormScaleUnitsBasisFightToChessVision simPanel = new SchönerZoom2FormScaleUnitsBasisFightToChessVision();
+
+		// 2. Frame erstellen und konfigurieren
+		JFrame frame = new JFrame("N-Body Sonnensystem-Simulation");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setLayout(new BorderLayout());
+		frame.add(simPanel, BorderLayout.CENTER);
+
+		// 3. Steuerelemente hinzufügen
+		frame.add(createControlPanel(simPanel), BorderLayout.NORTH);
+
+		// 4. Frame anzeigen
+		frame.pack();
+		frame.setLocationRelativeTo(null);
+		frame.setVisible(true);
+
+		// 5. Game Loop starten
+		simPanel.startGameLoop();
+	}
+
+	private static JPanel createControlPanel(SchönerZoom2FormScaleUnitsBasisFightToChessVision simPanel) {
+		JPanel mainControlPanel = new JPanel();
+		mainControlPanel.setLayout(new BoxLayout(mainControlPanel, BoxLayout.Y_AXIS));
+
+		// 1. Unteres Panel für Zoom- und Pan-Steuerung
+		JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
+		JButton zoomIn = new JButton("Zoom In");
+		JButton zoomOut = new JButton("Zoom Out");
+		JButton panLeft = new JButton("← Links");
+		JButton panRight = new JButton("Rechts →");
+		JButton panUp = new JButton("↑ Hoch");
+		JButton panDown = new JButton("↓ Runter");
+
+		zoomIn.addActionListener(e -> simPanel.zoomIn());
+		zoomOut.addActionListener(e -> simPanel.zoomOut());
+		panLeft.addActionListener(e -> simPanel.panLeft());
+		panRight.addActionListener(e -> simPanel.panRight());
+		panUp.addActionListener(e -> simPanel.panUp());
+		panDown.addActionListener(e -> simPanel.panDown());
+
+		navPanel.add(zoomIn);
+		navPanel.add(zoomOut);
+		navPanel.add(panLeft);
+		navPanel.add(panRight);
+		navPanel.add(panUp);
+		navPanel.add(panDown);
+
+		// 2. Aktions-Panel für Einheiten-Befehle (Heilen, Bauen, Zaubern, Angriff)
+		JPanel actionPanel = createActionControlPanel(simPanel);
+
+		// Beide Panels in das Haupt-Steuerungselement integrieren
+		mainControlPanel.add(navPanel);
+		mainControlPanel.add(actionPanel);
+
+		return mainControlPanel;
+	}
+}
